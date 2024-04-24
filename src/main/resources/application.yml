@@ -1,0 +1,6 @@
+server:
+  port: 9090
+spring:
+  data:
+    mongodb:
+      uri: mongodb://root:root@localhost:27017/trackerdatabase?authSource=admin
