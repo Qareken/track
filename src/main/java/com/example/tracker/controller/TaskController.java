@@ -12,6 +12,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.ServerSentEvent;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -26,17 +29,20 @@ public class TaskController {
 
 
     @GetMapping
-    public Flux<TaskDto> getAllItems() {
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_MANAGER')")
+    public Flux<TaskDto> getAllItems(@AuthenticationPrincipal UserDetails currentUser) {
 
        taskService.findAll().collectList().subscribe(System.out::println);
         return taskService.findAll();
     }
     @GetMapping("/by-id/{id}")
-    public Mono<ResponseEntity<TaskDto>> findById(@PathVariable(name = "id")  String id) {
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_MANAGER')")
+    public Mono<ResponseEntity<TaskDto>> findById(@PathVariable(name = "id")  String id,@AuthenticationPrincipal UserDetails currentUser ) {
         return taskService.findById(id).map(ResponseEntity::ok).defaultIfEmpty(ResponseEntity.notFound().build());
     }
     @PutMapping("/{id}")
-    public Mono<ResponseEntity<TaskDto>> addObserver(@PathVariable String id, @RequestBody UserDto userDto) {
+    @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_MANAGER')")
+    public Mono<ResponseEntity<TaskDto>> addObserver(@PathVariable String id, @RequestBody UserDto userDto,@AuthenticationPrincipal UserDetails currentUser) {
         return taskService.addObservers(id, userDto).map(ResponseEntity::ok).defaultIfEmpty(ResponseEntity.notFound().build());
     }
     @PutMapping("/update/{id}")
@@ -44,15 +50,18 @@ public class TaskController {
         return taskService.update(id, taskDto).map(ResponseEntity::ok).defaultIfEmpty(ResponseEntity.notFound().build());
     }
     @PostMapping
-    public Mono<ResponseEntity<TaskDto>> createTask(@RequestBody TaskDto taskDto) {
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    public Mono<ResponseEntity<TaskDto>> createTask(@RequestBody TaskDto taskDto,@AuthenticationPrincipal UserDetails currentUser) {
         return taskService.create(taskDto).doOnSuccess(taskUpdatePublisher::publish).map(ResponseEntity::ok);
     }
     @DeleteMapping("/{id}")
-    public Mono<ResponseEntity<Void>> deleteTask(@PathVariable String id) {
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    public Mono<ResponseEntity<Void>> deleteTask(@PathVariable String id,@AuthenticationPrincipal UserDetails currentUser) {
         return taskService.deleteById(id).then(Mono.just(ResponseEntity.noContent().build()));
     }
     @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<ServerSentEvent<TaskDto>> getTaskUpdates() {
+    @PreAuthorize("hasRole('ROLE_MANAGER')")
+    public Flux<ServerSentEvent<TaskDto>> getTaskUpdates(@AuthenticationPrincipal UserDetails currentUser) {
         return taskUpdatePublisher.getUpdatesSinks().asFlux().map(item ->
                 ServerSentEvent.builder(item).build());
     }

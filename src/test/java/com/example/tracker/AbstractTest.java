@@ -3,10 +3,12 @@ package com.example.tracker;
 import com.example.tracker.dto.TaskDto;
 import com.example.tracker.entity.Task;
 import com.example.tracker.entity.User;
+import com.example.tracker.entity.enumurate.RoleType;
 import com.example.tracker.entity.enumurate.TaskStatus;
 import com.example.tracker.mapper.TaskMapper;
 import com.example.tracker.mapper.UserMapper;
 import com.example.tracker.repository.TaskRepository;
+import com.example.tracker.security.CustomUserDetailsService;
 import com.example.tracker.service.impl.TaskServiceImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,10 +24,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @SpringBootTest
 @Testcontainers
@@ -49,14 +48,16 @@ public class AbstractTest {
     @Autowired
     protected TaskServiceImpl taskService;
     @Autowired
+    protected CustomUserDetailsService customUserDetailsService;
+    @Autowired
     protected TaskRepository taskRepository;
     @Autowired
     protected TaskMapper taskMapper;
     @Autowired
     protected UserMapper userMapper;
-    protected    List<User> listUser = List.of(new User(FIRST_USER, "John", "john@example.com"),
-            new User(SECOND_USER, "Paul", "paul@example.com"),
-            new User(THIRD_USER, "Lucy", "lucy@example.com"));
+    protected    List<User> listUser = List.of(new User(FIRST_USER, "John", "john@example.com", "12345", Set.of(RoleType.ROLE_USER)),
+            new User(SECOND_USER, "Paul", "paul@example.com", "12345", Set.of(RoleType.ROLE_MANAGER)),
+            new User(THIRD_USER, "Lucy", "lucy@example.com", "12345", Set.of(RoleType.ROLE_USER)));
 
     @BeforeEach
     public void setUp(){
